@@ -155,10 +155,10 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('log')">Log</button>
-  <button class="tab" onclick="switchTab('last')">Last</button>
-  <button class="tab" onclick="switchTab('progress')">Progress</button>
-  <button class="tab" onclick="switchTab('history')">History</button>
+  <button class="tab active" data-tab="log">Log</button>
+  <button class="tab" data-tab="last">Last</button>
+  <button class="tab" data-tab="progress">Progress</button>
+  <button class="tab" data-tab="history">History</button>
 </div>
 
 <div class="content" id="content"></div>
@@ -229,11 +229,18 @@ function showToast(msg) {
 
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['log','last','progress','history'][i] === tab);
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
   });
   render();
 }
+
+// Tab click listeners (works with ES modules)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+});
 
 // ── Firebase ───────────────────────────────────────────────────────────────
 async function loadSessions() {
@@ -350,8 +357,8 @@ function renderLog() {
       <input type="date" id="sessionDate" value="${sessionDate}" style="width:auto"/>
     </div>
     <div class="mode-toggle">
-      <button class="btn ${logMode==='manual'?'btn-primary':'btn-secondary'}" onclick="setMode('manual')">Manual</button>
-      <button class="btn ${logMode==='paste'?'btn-primary':'btn-secondary'}" onclick="setMode('paste')">Paste Memo</button>
+      <button class="btn ${logMode==='manual'?'btn-primary':'btn-secondary'}" onclick="window.setMode('manual')">Manual</button>
+      <button class="btn ${logMode==='paste'?'btn-primary':'btn-secondary'}" onclick="window.setMode('paste')">Paste Memo</button>
     </div>
     ${logMode === 'manual' ? renderManual() : renderPaste()}
   `;
@@ -365,13 +372,13 @@ function renderManual() {
       <input type="number" placeholder="3" min="1" value="${r.sets}" oninput="updateRow(${i},'sets',this.value)"/>
       <input type="number" placeholder="10" min="1" value="${r.reps}" oninput="updateRow(${i},'reps',this.value)"/>
       <input type="number" placeholder="0" min="0" step="0.5" value="${r.weight}" oninput="updateRow(${i},'weight',this.value)"/>
-      <button class="btn-danger" onclick="removeRow(${i})">×</button>
+      <button class="btn-danger" onclick="window.removeRow(${i})">×</button>
     </div>`;
   });
   return `${rows}
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="addRow()">+ Add</button>
-      <button class="btn btn-primary" onclick="doSaveManual()">Save Session</button>
+      <button class="btn btn-secondary" onclick="window.addRow()">+ Add</button>
+      <button class="btn btn-primary" onclick="window.doSaveManual()">Save Session</button>
     </div>`;
 }
 
@@ -382,13 +389,13 @@ function renderPaste() {
       <div class="parsed-title">✓ Detected ${parsedExercises.length} exercise${parsedExercises.length>1?'s':''}</div>
       ${parsedExercises.map(e => `<div class="parsed-row"><span>${e.name}</span><span class="parsed-weight">${e.sets}×${e.reps}${e.weight?' @ '+e.weight+'kg':''}</span></div>`).join('')}
     </div>
-    <div class="btn-row"><button class="btn btn-primary" onclick="doSaveParsed()">Save Session</button></div>`;
+    <div class="btn-row"><button class="btn btn-primary" onclick="window.doSaveParsed()">Save Session</button></div>`;
   }
   return `
     <label class="form-label">Paste your WhatsApp voice memo text</label>
     <textarea id="memoInput" placeholder="e.g. Bench press 4x10 @ 40kg&#10;Squat 3 sets 8 reps at 60kg">${memoText}</textarea>
     ${parseError ? `<div class="error-text">${parseError}</div>` : ''}
-    <div class="btn-row"><button class="btn btn-secondary" onclick="doParse()">Parse</button></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="window.doParse()">Parse</button></div>
     ${preview}`;
 }
 
@@ -404,9 +411,4 @@ function renderLast() {
     const ds = d.toISOString().split('T')[0];
     const has = sessions.some(s=>s.date===ds);
     const isToday = ds === todayStr();
-    return `<div class="streak-dot ${has?'done':''} ${isToday&&has?'today':''}"></div>`;
-  }).join('');
-
-  return `
-    <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;justify-content:space-betwee
+    return `<div class="st
