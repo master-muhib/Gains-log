@@ -242,12 +242,13 @@ async function loadSessions() {
     const q = query(collection(db, 'sessions'), orderBy('date', 'desc'));
     const snap = await getDocs(q);
     sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // seed June 1 if empty
     if (sessions.length === 0) await seedData();
     updateChallenge();
     render();
   } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not connect to database.<br>${e.message}</div></div>`;
+    sessions = [];
+    render();
+    showToast('Firebase offline - check connection');
   }
 }
 
@@ -404,4 +405,8 @@ function renderLast() {
     const has = sessions.some(s=>s.date===ds);
     const isToday = ds === todayStr();
     return `<div class="streak-dot ${has?'done':''} ${isToday&&has?'today':''}"></div>`;
-  }).jo
+  }).join('');
+
+  return `
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-betwee
